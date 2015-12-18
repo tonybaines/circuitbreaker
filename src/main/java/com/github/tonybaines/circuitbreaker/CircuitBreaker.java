@@ -37,16 +37,48 @@ import java.util.function.Supplier;
  * end note
  * @enduml
  */
-public class CircuitBreaker<INPUT, OUTPUT> {
+public class CircuitBreaker<INPUT, OUTPUT> implements CircuitBreakerMBean {
   private static final Logger LOG = LoggerFactory.getLogger(CircuitBreaker.class);
 
-  private final Check check;
+
+  private enum StateLabel {OPEN, CLOSED;}
   private final ScheduledExecutorService scheduler;
 
   private Supplier<RequestHandler<INPUT,OUTPUT>> nextState;
+
+  private final Check check;
   private RequestHandler<INPUT,OUTPUT> currentBehaviour;
+  private Check currentCheck;
+  private final Check suppliedCheck;
   private final RequestHandler<INPUT, OUTPUT> openStateBehaviour;
   private final RequestHandler<INPUT, OUTPUT> closedStateBehaviour;
+  private String lastCheckDescription = "NONE";
+  private StateLabel currentStateLabel = StateLabel.CLOSED;
+
+  @Override(/*MBean Interface*/)
+  public String getCurrentState() {
+    return currentStateLabel.name();
+  }
+
+  @Override(/*MBean Interface*/)
+  public String getLastCheckDescription() {
+    return lastCheckDescription;
+  }
+
+  @Override(/*MBean Interface*/)
+  public void forceClosed() {
+    this.currentCheck = () -> new Check.Status(true, "FORCED-CLOSED");
+  }
+
+  @Override(/*MBean Interface*/)
+  public void forceOpen() {
+    this.currentCheck = () -> new Check.Status(false, "FORCED-OPEN");
+  }
+
+  @Override(/*MBean Interface*/)
+  public void resetToNormalOperation() {
+    this.currentCheck = this.suppliedCheck;
+  }
 
   @FunctionalInterface
   public interface RequestHandler<REQ, RESP> {
@@ -71,7 +103,13 @@ public class CircuitBreaker<INPUT, OUTPUT> {
       return closedBehaviour.responseTo(i); // The result of the supplied 'closed' behaviour
     };
 
-    this.check = check;
+    this.suppliedCheck = check;
+    this.currentCheck = suppliedCheck;
+    this.check = () -> {
+      Check.Status status = this.currentCheck.check();
+      this.lastCheckDescription = status.toString();
+      return status;
+    };
     this.scheduler = scheduler;
     this.nextState = closedState();
     setCurrentBehaviour();
@@ -87,9 +125,17 @@ public class CircuitBreaker<INPUT, OUTPUT> {
     */
     return () -> {
       try {
-        return check.check().status() ? this.closedStateBehaviour : this.openStateBehaviour;
+        if (check.check().status()) {
+          currentStateLabel = StateLabel.CLOSED;
+          return this.closedStateBehaviour;
+        }
+        else {
+          currentStateLabel = StateLabel.OPEN;
+          return this.openStateBehaviour;
+        }
       } catch (RuntimeException e) {
-        LOG.warn("Caught an exception while running the check ('%s').  Defaulting to 'Closed' behaviour", e.getMessage());
+        LOG.warn("Caught an exception while running the check.  Defaulting to 'Closed' behaviour", e);
+        currentStateLabel = StateLabel.CLOSED;
         return closedStateBehaviour;
       }
     };

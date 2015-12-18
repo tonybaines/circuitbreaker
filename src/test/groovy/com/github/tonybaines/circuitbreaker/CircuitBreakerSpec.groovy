@@ -6,19 +6,10 @@ import spock.lang.Specification
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
+import static com.github.tonybaines.circuitbreaker.CircuitBreakerFixture.*
+
 @Slf4j
 class CircuitBreakerSpec extends Specification {
-  Check CHECK_ALWAYS_OK = { new Check.Status(true, "TEST") }
-  Check CHECK_ALWAYS_FAILS = { new Check.Status(false, "TEST") }
-  Check CHECK_THROWS_EXCEPTION = {throw new RuntimeException("Check threw an exception!")}
-  CircuitBreaker.RequestHandler<String, Integer> CLOSED_BEHAVIOUR = { x ->
-    log.debug("Running 'Closed' behaviour")
-    return x.length()
-  }
-  CircuitBreaker.RequestHandler<String, Integer> OPEN_BEHAVIOUR = {
-    log.debug("Running 'Open' behaviour")
-    throw new RuntimeException("Fail fast")
-  }
 
   def "when in the 'Closed' state the Circuit Breaker allows requests"() {
     when:
@@ -117,7 +108,7 @@ class CircuitBreakerSpec extends Specification {
     StubScheduledExecutor stubScheduler = new StubScheduledExecutor()
 
     CircuitBreaker<String, Integer> circuitBreaker = CircuitBreaker.<String, Integer> newCircuitBreaker()
-      .check(CHECK_THROWS_EXCEPTION, Duration.ofSeconds(1))
+      .check(CircuitBreakerFixture.CHECK_THROWS_EXCEPTION, Duration.ofSeconds(1))
       .whenClosed(CLOSED_BEHAVIOUR)
       .whenOpen(OPEN_BEHAVIOUR, Duration.ofSeconds(4))
       .withScheduler(stubScheduler)
