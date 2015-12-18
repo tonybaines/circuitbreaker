@@ -2,6 +2,7 @@ package com.github.tonybaines.circuitbreaker
 
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.Multimap
+import groovy.util.logging.Slf4j
 
 import java.util.concurrent.Callable
 import java.util.concurrent.ScheduledExecutorService
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit
  *   <li>The return value of the schedule* methods aren't used</li>
  * </ul>
  */
+@Slf4j
 public class StubScheduledExecutor extends NullExecutorService implements ScheduledExecutorService {
   private final Clock clock = new Clock()
   private Multimap<Long, Runnable> runnableEvents = HashMultimap.create()
@@ -48,7 +50,7 @@ public class StubScheduledExecutor extends NullExecutorService implements Schedu
 
   public void tick() {
     long t = clock.tick()
-    CircuitBreaker.log("tick(): t="+t)
+    log.debug("tick(): t="+t)
 
     // Remove and run all the Runnables/Callables scheduled for
     // this 'tick'

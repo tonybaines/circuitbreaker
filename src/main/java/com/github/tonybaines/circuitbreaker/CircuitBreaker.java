@@ -1,7 +1,9 @@
 package com.github.tonybaines.circuitbreaker;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
-import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -36,6 +38,7 @@ import java.util.function.Supplier;
  * @enduml
  */
 public class CircuitBreaker<INPUT, OUTPUT> {
+  private static final Logger LOG = LoggerFactory.getLogger(CircuitBreaker.class);
 
   private final Check check;
   private final ScheduledExecutorService scheduler;
@@ -80,13 +83,9 @@ public class CircuitBreaker<INPUT, OUTPUT> {
     scheduleChecks(checkInterval);
   }
 
-  public static void log(String msg, String... args) {
-    System.out.println(Instant.now().toString() + " " + String.format(msg, args));
-  }
-
 
   private Supplier<RequestHandler<INPUT,OUTPUT>> closedState() {
-    log("Using 'closed' check behaviour");
+    LOG.info("Using 'closed' check behaviour");
     /*
      If the check succeeds, switch on the value
      If it throws an exception, default to the 'closed' behaviour
@@ -95,7 +94,7 @@ public class CircuitBreaker<INPUT, OUTPUT> {
       try {
         return check.check() ? this.closedStateBehaviour : this.openStateBehaviour;
       } catch (RuntimeException e) {
-        log("Caught an exception while running the check ('%s').  Defaulting to 'Closed' behaviour", e.getMessage());
+        LOG.warn("Caught an exception while running the check ('%s').  Defaulting to 'Closed' behaviour", e.getMessage());
         return closedStateBehaviour;
       }
     };
@@ -103,7 +102,7 @@ public class CircuitBreaker<INPUT, OUTPUT> {
   }
 
   private Supplier<RequestHandler<INPUT,OUTPUT>> openState() {
-    log("Using 'open' check behaviour");
+    LOG.info("Using 'open' check behaviour");
     return () -> openStateBehaviour;
   }
 
