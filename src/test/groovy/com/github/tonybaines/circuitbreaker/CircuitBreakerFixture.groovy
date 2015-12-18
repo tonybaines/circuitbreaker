@@ -12,4 +12,10 @@ class CircuitBreakerFixture {
     CircuitBreakerSpec.log.debug("Running 'Open' behaviour")
     throw new RuntimeException("Fail fast")
   }
+
+  public static class StubChecker implements Check {
+    def passes = true
+    @Override
+    public Check.Status check() {new Check.Status(passes, "TEST")}
+  }
 }

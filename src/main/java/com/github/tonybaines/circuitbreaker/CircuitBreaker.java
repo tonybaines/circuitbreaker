@@ -108,6 +108,7 @@ public class CircuitBreaker<INPUT, OUTPUT> implements CircuitBreakerMBean {
     this.check = () -> {
       Check.Status status = this.currentCheck.check();
       this.lastCheckDescription = status.toString();
+      LOG.debug(lastCheckDescription);
       return status;
     };
     this.scheduler = scheduler;

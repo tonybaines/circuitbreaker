@@ -178,11 +178,4 @@ class CircuitBreakerSpec extends Specification {
       assert e.message == 'Fail fast'
     }
   }
-
-
-  private static class StubChecker implements Check {
-    def passes = true
-    @Override
-    public Check.Status check() {new Check.Status(passes, "TEST")}
-  }
 }
