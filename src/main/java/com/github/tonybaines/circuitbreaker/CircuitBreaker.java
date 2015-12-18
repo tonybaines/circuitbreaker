@@ -49,11 +49,6 @@ public class CircuitBreaker<INPUT, OUTPUT> {
   private final RequestHandler<INPUT, OUTPUT> closedStateBehaviour;
 
   @FunctionalInterface
-  public interface Check {
-    Boolean check();
-  }
-
-  @FunctionalInterface
   public interface RequestHandler<REQ, RESP> {
     RESP responseTo(REQ REQ);
   }
@@ -92,7 +87,7 @@ public class CircuitBreaker<INPUT, OUTPUT> {
     */
     return () -> {
       try {
-        return check.check() ? this.closedStateBehaviour : this.openStateBehaviour;
+        return check.check().status() ? this.closedStateBehaviour : this.openStateBehaviour;
       } catch (RuntimeException e) {
         LOG.warn("Caught an exception while running the check ('%s').  Defaulting to 'Closed' behaviour", e.getMessage());
         return closedStateBehaviour;

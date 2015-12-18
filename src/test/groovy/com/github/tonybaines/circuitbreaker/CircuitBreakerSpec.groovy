@@ -8,9 +8,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @Slf4j
 class CircuitBreakerSpec extends Specification {
-  CircuitBreaker.Check CHECK_ALWAYS_OK = { true }
-  CircuitBreaker.Check CHECK_ALWAYS_FAILS = { false }
-  CircuitBreaker.Check CHECK_THROWS_EXCEPTION = {throw new RuntimeException("Check threw an exception!")}
+  Check CHECK_ALWAYS_OK = { new Check.Status(true, "TEST") }
+  Check CHECK_ALWAYS_FAILS = { new Check.Status(false, "TEST") }
+  Check CHECK_THROWS_EXCEPTION = {throw new RuntimeException("Check threw an exception!")}
   CircuitBreaker.RequestHandler<String, Integer> CLOSED_BEHAVIOUR = { x ->
     log.debug("Running 'Closed' behaviour")
     return x.length()
@@ -144,10 +144,10 @@ class CircuitBreakerSpec extends Specification {
     StubScheduledExecutor stubScheduler = new StubScheduledExecutor()
 
     // First fail, then throw an exception
-    CircuitBreaker.Check unstableCheck = new CircuitBreaker.Check() {
+    Check unstableCheck = new Check() {
       AtomicInteger callCount = new AtomicInteger(0)
-      public Boolean check() {
-        if (callCount.incrementAndGet() <= 1) return false
+      public Check.Status check() {
+        if (callCount.incrementAndGet() <= 1) return new Check.Status(false, "TEST")
         else throw new RuntimeException("Check threw an exception!")
       }
     }
@@ -189,9 +189,9 @@ class CircuitBreakerSpec extends Specification {
   }
 
 
-  private static class StubChecker implements CircuitBreaker.Check {
+  private static class StubChecker implements Check {
     def passes = true
     @Override
-    public Boolean check() {passes}
+    public Check.Status check() {new Check.Status(passes, "TEST")}
   }
 }
