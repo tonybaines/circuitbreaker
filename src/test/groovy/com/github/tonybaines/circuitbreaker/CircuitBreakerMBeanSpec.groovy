@@ -1,8 +1,6 @@
 package com.github.tonybaines.circuitbreaker
 
-import spock.lang.Ignore
 import spock.lang.Specification
-import spock.lang.Unroll
 
 import java.time.Duration
 
@@ -10,7 +8,6 @@ import static com.github.tonybaines.circuitbreaker.CircuitBreakerFixture.*
 
 class CircuitBreakerMBeanSpec extends Specification {
 
-  @Unroll
   def "the MBean exposes the result of the last status check (#pattern)"() {
     given:
     StubScheduledExecutor stubScheduler = new StubScheduledExecutor()
@@ -31,8 +28,8 @@ class CircuitBreakerMBeanSpec extends Specification {
 
     where:
     check              | pattern | state
-    CHECK_ALWAYS_OK    | 'PASS'  | 'CLOSED'
-    CHECK_ALWAYS_FAILS | 'FAIL'  | 'OPEN'
+    CHECK_ALWAYS_OK    | 'PASS'  | 'Closed'
+    CHECK_ALWAYS_FAILS | 'FAIL'  | 'Open'
   }
 
   def "a Circuit Breaker can be forced into a permanently-open state"() {
@@ -50,7 +47,7 @@ class CircuitBreakerMBeanSpec extends Specification {
     stubScheduler.tick() // t=1
 
     then:
-    circuitBreaker.getCurrentState() == 'CLOSED'
+    circuitBreaker.getCurrentState() == 'Closed'
 
     when:
     circuitBreaker.forceOpen()
@@ -58,7 +55,7 @@ class CircuitBreakerMBeanSpec extends Specification {
     circuitBreaker.handle('foo')
 
     then:
-    circuitBreaker.getCurrentState() == 'OPEN'
+    circuitBreaker.getCurrentState() == 'ForcedOpen'
     thrown(RuntimeException)
 
     when:
@@ -66,7 +63,7 @@ class CircuitBreakerMBeanSpec extends Specification {
     circuitBreaker.handle('foo')
 
     then:
-    circuitBreaker.getCurrentState() == 'OPEN'
+    circuitBreaker.getCurrentState() == 'ForcedOpen'
     thrown(RuntimeException)
 
     when: 'the Circuit Breaker is reset, and the open-timeout has expired'
@@ -74,7 +71,7 @@ class CircuitBreakerMBeanSpec extends Specification {
     stubScheduler.tick() // t=14
 
     then:
-    circuitBreaker.getCurrentState() == 'CLOSED'
+    circuitBreaker.getCurrentState() == 'Closed'
     circuitBreaker.handle('foo') == 3
   }
 

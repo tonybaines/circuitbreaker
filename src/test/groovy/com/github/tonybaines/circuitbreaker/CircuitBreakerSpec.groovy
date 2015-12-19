@@ -63,7 +63,7 @@ class CircuitBreakerSpec extends Specification {
     expectOpenCircuitBehaviourFrom circuitBreaker
 
     when: "Wait for the open-timeout to complete"
-    stubScheduler.tick(3) // t=4,5,6
+    stubScheduler.tick(4) // t=4,5,6,7
     then: "we're back to 'Closed' behaviour"
     expectClosedCircuitBehaviourFrom circuitBreaker
   }
