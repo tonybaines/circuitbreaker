@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class ForcedOpenState<INPUT, OUTPUT> extends OpenState<INPUT, OUTPUT> {
+public class ForcedOpenState<INPUT, OUTPUT> extends AbstractState<INPUT, OUTPUT> {
   private static final Logger LOG = LoggerFactory.getLogger(ForcedOpenState.class);
 
   public ForcedOpenState(StateConfiguration<INPUT, OUTPUT> stateConfiguration) {
@@ -19,6 +19,11 @@ public class ForcedOpenState<INPUT, OUTPUT> extends OpenState<INPUT, OUTPUT> {
   @Override
   public String name() {
     return "ForcedOpen";
+  }
+
+  @Override
+  public OUTPUT responseTo(INPUT req) {
+    return stateConfiguration.getOpenBehaviour().responseTo(req);
   }
 
   @Override

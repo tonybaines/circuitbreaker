@@ -65,6 +65,7 @@ public class CircuitBreaker<INPUT, OUTPUT> implements CircuitBreakerMBean {
   }
 
   public OUTPUT handle(INPUT input) {
+    LOG.debug("In state {}", state.name());
     return state.responseTo(input);
   }
 

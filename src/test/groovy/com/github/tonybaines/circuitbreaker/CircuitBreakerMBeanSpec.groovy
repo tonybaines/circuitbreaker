@@ -75,4 +75,45 @@ class CircuitBreakerMBeanSpec extends Specification {
     circuitBreaker.handle('foo') == 3
   }
 
+  def "a Circuit Breaker can be forced into a permanently-closed state"() {
+    given:
+    StubScheduledExecutor stubScheduler = new StubScheduledExecutor()
+
+    CircuitBreaker<String, Integer> circuitBreaker = CircuitBreaker.newCircuitBreaker()
+      .withScheduler(stubScheduler)
+      .check(CHECK_ALWAYS_FAILS, Duration.ofSeconds(1))
+      .whenOpen(OPEN_BEHAVIOUR, Duration.ofSeconds(2))
+      .whenClosed(CLOSED_BEHAVIOUR)
+      .build()
+
+    when:
+    stubScheduler.tick() // t=1
+
+    then: "the check fails and the Circuit Breaker flips 'Open'"
+    circuitBreaker.getCurrentState() == 'Open'
+
+    when: "the Circuit Breaker is forced 'Closed'"
+    circuitBreaker.forceClosed()
+    stubScheduler.tick(2) // t=3
+
+    then: 'it stays that way'
+    circuitBreaker.getCurrentState() == 'ForcedClosed'
+    circuitBreaker.handle('foo') == 3
+
+    when: '...'
+    stubScheduler.tick(10) // t=13
+
+    then:
+    circuitBreaker.getCurrentState() == 'ForcedClosed'
+
+    when: 'the Circuit Breaker is reset'
+    circuitBreaker.resetToNormalOperation()
+    stubScheduler.tick() // t=14
+    circuitBreaker.handle('foo')
+
+    then: "it goes back into the 'Open' state as the check is still failing"
+    circuitBreaker.getCurrentState() == 'Open'
+    thrown(RuntimeException)
+  }
+
 }

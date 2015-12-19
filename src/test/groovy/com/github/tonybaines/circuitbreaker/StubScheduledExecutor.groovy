@@ -37,7 +37,7 @@ public class StubScheduledExecutor extends NullExecutorService implements Schedu
 
   @Override
   public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-    (1..10).each { i ->
+    (1..100).each { i ->
       runnableEvents.put(clock.getTime() + (initialDelay + (period * i)), command)
     }
     return null
