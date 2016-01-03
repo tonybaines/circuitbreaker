@@ -1,11 +1,8 @@
 package com.github.tonybaines.circuitbreaker.statemachine;
 
 import com.github.tonybaines.circuitbreaker.Check;
-import com.github.tonybaines.circuitbreaker.RequestHandler;
 
-import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 

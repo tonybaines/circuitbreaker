@@ -1,10 +1,6 @@
 package com.github.tonybaines.circuitbreaker.statemachine;
 
 import com.github.tonybaines.circuitbreaker.Check;
-import com.github.tonybaines.circuitbreaker.RequestHandler;
-
-import java.time.Duration;
-import java.util.concurrent.ScheduledExecutorService;
 
 public class ClosedState<INPUT, OUTPUT> extends AbstractState<INPUT, OUTPUT> {
 
